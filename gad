@@ -12,6 +12,8 @@ usage() {
 -v: Print information to stdout even if an update isn't needed
 -s: Use stdin instead of OpenDNS to determine external IP address
 -i: Use ifconfig instead of OpenDNS to determine external IP address
+-a: Set APIKEY directly
+-p: Set custom path for APIKEY
 
 TTL: The custom TTL value (in seconds) to set on all records
 EXT_IF: The name of your external network interface
@@ -37,6 +39,7 @@ while [ $# -gt 0 ]; do
         -s) stdin_ip="yes";;
         -i) ext_if="$2"; shift;;
         -a) apikey="$2"; shift;;
+        -p) apikey_path="$2"; shift;;
         -d) domain="$2"; shift;;
         -r) records="$2"; shift;;
         *) usage; break
@@ -47,12 +50,17 @@ if [ -z "$domain" -o -z "$records" ]; then
     usage
 fi
 if [ -z "$apikey" ]; then
-  if [ -f "${HOME}/.gandiapi" ]; then
-    apikey=$(cat "${HOME}/.gandiapi")
+  if [ -z "$apikey_path"]; then
+      if [ -f "${HOME}/.gandiapi" ]; then
+          apikey=$(cat "${HOME}/.gandiapi")
+      else
+          usage
+      fi
   else
-    usage
+      apikey=$(cat $apikey_path)
   fi
 fi
+
 if [ ! -z "$ttl" -a "$v5" != "yes" ]; then
     printf "Setting a custom TTL on records is not supported on Gandi's legacy DNS platform.\\n"
     exit 1
